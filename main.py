@@ -1,5 +1,6 @@
 import numpy as np
 import datetime
+import os
 
 from io import BytesIO
 from time import sleep
@@ -19,6 +20,7 @@ default_settings = {
 
 }
 
+folder = os.getcwd()
 stream = BytesIO()
 camera = PiCamera(resolution=(1920, 1440))
 camera.start_preview()
@@ -31,6 +33,8 @@ for _ in camera.capture_continuous(stream, format='jpeg'):
     # Calculate average pixel value for detemining day-twilight-night conditions
     pix_ave = int(np.average(image))
     filename = datetime.datetime.now().strftime('%a - %H-%M') + f' ({pix_ave})img.jpg'
+    save_path = os.path.join(folder, filename)
+    Image.save(save_path)
     print('>>>>>', datetime.datetime.now(), f'{filename} captured', sep='     ')
     sleep(10) # wait 10 minutes
 
