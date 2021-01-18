@@ -36,5 +36,5 @@ for _ in camera.capture_continuous(stream, format='jpeg'):
     save_path = os.path.join(folder, filename)
     image.save(save_path)
     print('>>>>>', datetime.datetime.now(), f'{filename} captured', sep='     ')
-    sleep(10) # wait 10 minutes
+    sleep(5*60) # wait 5 minutes
 
