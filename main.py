@@ -34,7 +34,7 @@ for _ in camera.capture_continuous(stream, format='jpeg'):
     pix_ave = int(np.average(image))
     filename = datetime.datetime.now().strftime('%a - %H-%M') + f' ({pix_ave})img.jpg'
     save_path = os.path.join(folder, filename)
-    Image.save(save_path)
+    image.save(save_path)
     print('>>>>>', datetime.datetime.now(), f'{filename} captured', sep='     ')
     sleep(10) # wait 10 minutes
 
