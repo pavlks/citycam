@@ -28,14 +28,16 @@ sleep(2)
 
 for _ in camera.capture_continuous(stream, format='jpeg'):
     # "Rewind" stream to the beginning so we can read its content
-    stream.seek(0)
     image = Image.open(stream)
     # Calculate average pixel value for detemining day-twilight-night conditions
     pix_ave = int(np.average(image))
-    filename = datetime.datetime.now().strftime('%a - %H-%M') + f' ({pix_ave})img.jpg'
+    filename = datetime.datetime.now().strftime('%a - %H-%M-%S') + f' ({pix_ave})img.jpg'
     save_path = os.path.join(folder, filename)
-    image.save(save_path)
-    image.truncate()
+    rotated = image.rotate(90)
+    rotated.save(save_path)
+    # image.save(save_path)
     print('>>>>>', datetime.datetime.now(), f'{filename} captured', sep='     ')
-    sleep(20) # wait 5 minutes
+    sleep(5*60) # wait 5 minutes
+    stream.seek(0)
+    stream.truncate()
 
