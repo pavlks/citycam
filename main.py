@@ -20,7 +20,7 @@ default_settings = {
 
 }
 
-folder = os.getcwd()
+folder = os.path.join(os.getcwd(), 'images')
 stream = BytesIO()
 camera = PiCamera(resolution=(1920, 1440))
 camera.start_preview()
@@ -35,6 +35,7 @@ for _ in camera.capture_continuous(stream, format='jpeg'):
     filename = datetime.datetime.now().strftime('%a - %H-%M') + f' ({pix_ave})img.jpg'
     save_path = os.path.join(folder, filename)
     image.save(save_path)
+    image.truncate()
     print('>>>>>', datetime.datetime.now(), f'{filename} captured', sep='     ')
-    sleep(5*60) # wait 5 minutes
+    sleep(20) # wait 5 minutes
 
