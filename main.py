@@ -22,6 +22,8 @@ default_settings = {
 
 }
 
+camera = picamera.PiCamera()
+
 def process_frame(src_frame, prev_frame, minimum_area):
     height, width = src_frame.shape[:2]
     new_dim = (500, 500 * height / width)  # calculating new dimensions for resizing
