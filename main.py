@@ -22,7 +22,7 @@ default_settings = {
 
 }
 
-camera = picamera.PiCamera()
+camera = PiCamera()
 
 def process_frame(src_frame, prev_frame, minimum_area):
     height, width = src_frame.shape[:2]
