@@ -63,7 +63,7 @@ def process_frame(src_frame, prev_frame, minimum_area):
         filename = datetime.datetime.now().strftime('%Y-%m-%d - %a - %H-%M-%S') + '.jpg'
 
         save_path = os.path.join(folder, filename)
-        rotated = image.rotate(180)
+        rotated = image.rotate(270)
         rotated.save(save_path)
 
 if __name__ == '__main__':
