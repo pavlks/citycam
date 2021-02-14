@@ -66,7 +66,7 @@ if __name__ == '__main__':
         while True:
             stream = BytesIO()
             camera.capture(stream, format='jpeg', use_video_port=False)
-            data = np.fromstring(stream.getvalue(), dtype=np.uint8)
+            data = np.frombuffer(stream.getvalue(), dtype=np.uint8)
             frame = cv2.imdecode(data, 1)
             if frame is not None:
                 prev_frame = process_frame(frame, prev_frame, default_settings['MINIMUM_AREA'])
