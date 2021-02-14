@@ -29,7 +29,7 @@ def process_frame(src_frame, prev_frame, minimum_area):
     new_dim = (500, int(500 * height / width))  # calculating new dimensions for resizing
     frame = cv2.resize(src_frame, new_dim, cv2.INTER_AREA)  # resizing the frame
     curr_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # applying black and white filter
-    curr_frame = cv2.GaussianBlur(gray, (21, 21), 0)  # applying blur
+    curr_frame = cv2.GaussianBlur(curr_frame, (21, 21), 0)  # applying blur
 
     # if the first frame is None, initialize it because there is no frame for comparing the current one with a previous one
     if prev_frame is None:
