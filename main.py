@@ -60,7 +60,8 @@ def process_frame(src_frame, prev_frame, minimum_area):
         # taking picture
         image = Image.open(stream)
         folder = os.path.join(os.getcwd(), 'images')
-        filename = datetime.datetime.now().strftime('%Y-%m-%d - %a - %H-%M-%S')
+        filename = datetime.datetime.now().strftime('%Y-%m-%d - %a - %H-%M-%S') + '.jpg'
+
         save_path = os.path.join(folder, filename)
         rotated = image.rotate(90)
         rotated.save(save_path)
