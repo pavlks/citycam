@@ -36,7 +36,7 @@ def process_frame(src_frame, prev_frame, minimum_area):
         prev_frame = curr_frame
         return prev_frame
 
-    # check if past_frame and current have the same sizes. This shouldnt occur but this is error handling
+    # check if past_frame and current have the same sizes. This shouldn't occur but this is error handling
     if prev_frame.shape[:2] != curr_frame.shape[:2]:
         print('Previous frame and current frame do not have the same sizes')
         print(f'{prev_frame.shape[:2]} != {curr_frame.shape[:2]}')
@@ -57,6 +57,13 @@ def process_frame(src_frame, prev_frame, minimum_area):
         if cv2.contourArea(ct) < default_settings['MINIMUM_AREA']:
             continue
         print('Motion detected')
+        # taking picture
+        image = Image.open(stream)
+        folder = os.path.join(os.getcwd(), 'images')
+        filename = datetime.datetime.now().strftime('%Y-%m-%d - %a - %H-%M-%S')
+        save_path = os.path.join(folder, filename)
+        rotated = image.rotate(90)
+        rotated.save(save_path)
 
 if __name__ == '__main__':
     camera.resolution = (640, 480)
