@@ -26,7 +26,7 @@ camera = PiCamera()
 
 def process_frame(src_frame, prev_frame, minimum_area):
     height, width = src_frame.shape[:2]
-    new_dim = (500, 500 * height / width)  # calculating new dimensions for resizing
+    new_dim = (500, int(500 * height / width))  # calculating new dimensions for resizing
     frame = cv2.resize(src_frame, new_dim, cv2.INTER_AREA)  # resizing the frame
     curr_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # applying black and white filter
     curr_frame = cv2.GaussianBlur(gray, (21, 21), 0)  # applying blur
