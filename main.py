@@ -51,9 +51,12 @@ def process_frame(src_frame, prev_frame, minimum_area):
     contours = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = contours[0]
 
+    # loop over the contours
     for ct in cnts:
-        if ct > default_settings['MINIMUM_AREA']:
-            print('Motion detected')
+        # if the contour is too small, ignore it
+        if cv2.contourArea(ct) < default_settings['MINIMUM_AREA']:
+            continue
+        print('Motion detected')
 
 if __name__ == '__main__':
     camera.resolution = (640, 480)
