@@ -45,7 +45,7 @@ def process_frame(src_frame, prev_frame, minimum_area):
     # computing the absolute difference between the current frame and previous frame
     frame_diff = cv2.absdiff(prev_frame, curr_frame)
     # applying a threshold to remove camera motion and other false positives
-    thresh = cv2.threshold(frame_diff, 50, 255, cv2.THRESH_BINARY)
+    thresh = cv2.threshold(frame_diff, 50, 255, cv2.THRESH_BINARY)[1]
     # dilate the threshold image to fill in holes, then find contours on thresholded image
     thresh = cv2.dilate(thresh, None, iterations=2)
     contours = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
