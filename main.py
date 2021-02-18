@@ -22,7 +22,23 @@ default_settings = {
 
 }
 
-camera = PiCamera()
+
+def take_photo(stream, resolution=(1920, 1440), rotate_angle=0):
+    # rewind stream to the beginning
+    stream.seek(0)
+    stream.truncate()
+    # pass stream to image
+    image = image.open(stream)
+    # building path for saving
+    folder = os.path.join(os.getcwd(), 'images')
+    filename = datetime.datetime.now().strftime('%y-%m-%d - %a - %h-%m-%s') + f' ({pix_ave})img.jpg'
+    save_path = os.path.join(folder, filename)
+    # rotate image if necessary
+    rotated = image.rotate(rotate_angle)
+    # saving image to file
+    rotated.save(save_path)
+    print(':::::', datetime.datetime.now(), f'{filename} captured', sep='     ')
+
 
 def process_frame(src_frame, prev_frame, minimum_area):
     height, width = src_frame.shape[:2]
@@ -53,10 +69,11 @@ def process_frame(src_frame, prev_frame, minimum_area):
 
     # loop over the contours
     for ct in cnts:
+        motion_area = cv2.contourArea(ct)
         # if the contour is too small, ignore it
-        if cv2.contourArea(ct) < default_settings['MINIMUM_AREA']:
+        if motion_area < default_settings['MINIMUM_AREA']:
             continue
-        print('Motion detected')
+        print(f'Motion detected. Area = {motion_area}')
         # taking picture
         image = Image.open(stream)
         folder = os.path.join(os.getcwd(), 'images')
@@ -67,6 +84,11 @@ def process_frame(src_frame, prev_frame, minimum_area):
         rotated.save(save_path)
 
 if __name__ == '__main__':
+    photo_stream = BytesIO()
+    photo_camera = PiCamera(resolution=(1920, 1440))
+    photo_camera.start_preview()
+    sleep(2)
+    camera = PiCamera()
     camera.resolution = (640, 480)
     prev_frame = None
     print('Starting motion detection')
@@ -83,18 +105,25 @@ if __name__ == '__main__':
     finally:
         print('Exiting...')
 
+
+
+
+
+
+
+
 '''
 folder = os.path.join(os.getcwd(), 'images')
-stream = BytesIO()
-camera = PiCamera(resolution=(1920, 1440))
-camera.start_preview()
+photo_stream = BytesIO()
+photo_camera = PiCamera(resolution=(1920, 1440))
+photo_camera.start_preview()
 sleep(2)
 
 for _ in camera.capture_continuous(stream, format='jpeg'):
-    image = Image.open(stream)
-    # Calculate average pixel value for detemining day-twilight-night conditions
+    image = image.open(stream)
+    # calculate average pixel value for detemining day-twilight-night conditions
     pix_ave = int(np.average(image))
-    filename = datetime.datetime.now().strftime('%Y-%m-%d - %a - %H-%M-%S') + f' ({pix_ave})img.jpg'
+    filename = datetime.datetime.now().strftime('%y-%m-%d - %a - %h-%m-%s') + f' ({pix_ave})img.jpg'
     save_path = os.path.join(folder, filename)
     rotated = image.rotate(90)
     rotated.save(save_path)
@@ -102,7 +131,7 @@ for _ in camera.capture_continuous(stream, format='jpeg'):
     print(':::::', datetime.datetime.now(), f'{filename} captured', sep='     ')
     # wait 5 minutes
     sleep(5*60)  
-    # "Rewind" stream to the beginning so we can read its content
+    # "rewind" stream to the beginning so we can read its content
     stream.seek(0)
     stream.truncate()
 '''
