@@ -9,97 +9,90 @@ from picamera import PiCamera
 from PIL import Image
 
 
-default_settings = {
-    'NIGHT_TWILIGHT_THRESHOLD': 90,
-    'NIGHT_DARK_THRESHOLD': 50,
-    'NIGHT_BLACK_THRESHOLD': 4,
-    'SPACE_TARGET_MB': 100,
-    'SPACE_TIMER_HOURS': 1,
-    'SPACE_MEDIA_DIR': 'os.',
-    'SPACE_TARGET_EXT': '.jpg',  # Make sure image format extention starts with a dot
-    'IMAGE_FORMAT': '.jpg',  # Make sure image format extention starts with a dot
-    'MINIMUM_AREA': 100,  # Motion detection area. If smaller, will ignore
+class StreetCamera:
+    NIGHT_TWILIGHT_THRESHOLD = 90
+    NIGHT_DARK_THRESHOLD = 50
+    NIGHT_BLACK_THRESHOLD = 4
+    SPACE_TARGET_MB = 100
+    SPACE_TIMER_HOURS = 1
+    SPACE_MEDIA_DIR = 'os.'
+    SPACE_TARGET_EXT = '.jpg'  # Make sure image format extention starts with a dot
+    IMAGE_FORMAT = '.jpg'  # Make sure image format extention starts with a dot
+    MINIMUM_AREA = 100  # Motion detection area. If smaller, will ignore
+    IMAGES_FOLDER = os.path.join(os.getcwd(), 'images')
 
-}
-
-
-def take_photo(stream, resolution=(1920, 1440), rotate_angle=0):
-    # rewind stream to the beginning
-    stream.seek(0)
-    stream.truncate()
-    # pass stream to image
-    image = image.open(stream)
-    # building path for saving
-    folder = os.path.join(os.getcwd(), 'images')
-    filename = datetime.datetime.now().strftime('%y-%m-%d - %a - %h-%m-%s') + f' ({pix_ave})img.jpg'
-    save_path = os.path.join(folder, filename)
-    # rotate image if necessary
-    rotated = image.rotate(rotate_angle)
-    # saving image to file
-    rotated.save(save_path)
-    print(':::::', datetime.datetime.now(), f'{filename} captured', sep='     ')
+    
+    def __init__(self, resolution=(800, 600), angle=0):
+        self.resolution = resolution
+        self.angle = angle
+        self.camera = PiCamera(resolution=self.resolution)
+        self.stream = BytesIO()
 
 
-def process_frame(src_frame, prev_frame, minimum_area):
-    height, width = src_frame.shape[:2]
-    new_dim = (500, int(500 * height / width))  # calculating new dimensions for resizing
-    frame = cv2.resize(src_frame, new_dim, cv2.INTER_AREA)  # resizing the frame
-    curr_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # applying black and white filter
-    curr_frame = cv2.GaussianBlur(curr_frame, (21, 21), 0)  # applying blur
-
-    # if the first frame is None, initialize it because there is no frame for comparing the current one with a previous one
-    if prev_frame is None:
-        prev_frame = curr_frame
-        return prev_frame
-
-    # check if past_frame and current have the same sizes. This shouldn't occur but this is error handling
-    if prev_frame.shape[:2] != curr_frame.shape[:2]:
-        print('Previous frame and current frame do not have the same sizes')
-        print(f'{prev_frame.shape[:2]} != {curr_frame.shape[:2]}')
-        return
-
-    # computing the absolute difference between the current frame and previous frame
-    frame_diff = cv2.absdiff(prev_frame, curr_frame)
-    # applying a threshold to remove camera motion and other false positives
-    thresh = cv2.threshold(frame_diff, 50, 255, cv2.THRESH_BINARY)[1]
-    # dilate the threshold image to fill in holes, then find contours on thresholded image
-    thresh = cv2.dilate(thresh, None, iterations=2)
-    contours = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = contours[0]
-
-    # loop over the contours
-    for ct in cnts:
-        motion_area = cv2.contourArea(ct)
-        # if the contour is too small, ignore it
-        if motion_area < default_settings['MINIMUM_AREA']:
-            continue
-        print(f'Motion detected. Area = {motion_area}')
-        # taking picture
+    def take_photo(self, stream):
+        # pass stream to image
         image = Image.open(stream)
-        folder = os.path.join(os.getcwd(), 'images')
-        filename = datetime.datetime.now().strftime('%Y-%m-%d - %a - %H-%M-%S') + '.jpg'
-
-        save_path = os.path.join(folder, filename)
-        rotated = image.rotate(270)
+        # define filename
+        filename = datetime.datetime.now().strftime('%y-%m-%d - %a - %h-%m-%s') + f' img.jpg'
+        # set path to save
+        save_path = os.path.join(self.IMAGES_FOLDER, filename)
+        # rotate image if necessary
+        rotated = image.rotate(self.angle)
+        # saving image to file
         rotated.save(save_path)
+        print(':::::', datetime.datetime.now(), f'{filename} captured', sep='     ')
+
+
+    def process_frame(self, src_frame, prev_frame):
+        height, width = src_frame.shape[:2]
+        new_dim = (500, int(500 * height / width))  # calculating new dimensions for resizing
+        frame = cv2.resize(src_frame, new_dim, cv2.INTER_AREA)  # resizing the frame
+        curr_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # applying black and white filter
+        curr_frame = cv2.GaussianBlur(curr_frame, (21, 21), 0)  # applying blur
+
+        # if the first frame is None, initialize it because there is no frame for comparing the current one with a previous one
+        if prev_frame is None:
+            prev_frame = curr_frame
+            return prev_frame
+
+        # check if past_frame and current have the same sizes. This shouldn't occur but this is error handling
+        if prev_frame.shape[:2] != curr_frame.shape[:2]:
+            print('Previous frame and current frame do not have the same sizes')
+            print(f'{prev_frame.shape[:2]} != {curr_frame.shape[:2]}')
+            return
+
+        # computing the absolute difference between the current frame and previous frame
+        frame_diff = cv2.absdiff(prev_frame, curr_frame)
+        # applying a threshold to remove camera motion and other false positives
+        thresh = cv2.threshold(frame_diff, 50, 255, cv2.THRESH_BINARY)[1]
+        # dilate the threshold image to fill in holes, then find contours on thresholded image
+        thresh = cv2.dilate(thresh, None, iterations=2)
+        contours = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = contours[0]
+
+        # loop over the contours
+        for ct in cnts:
+            motion_area = cv2.contourArea(ct)
+            # if the contour is too small, ignore it
+            if motion_area < self.MINIMUM_AREA:
+                continue
+            print(f'Motion detected. Area = {motion_area}')
+            # taking picture
+            self.take_photo(stream)
 
 if __name__ == '__main__':
-    photo_stream = BytesIO()
-    photo_camera = PiCamera(resolution=(1920, 1440))
-    photo_camera.start_preview()
-    sleep(2)
-    camera = PiCamera()
-    camera.resolution = (640, 480)
+    cam = StreetCamera(angle=90)
+
     prev_frame = None
     print('Starting motion detection')
     try:
         while True:
             stream = BytesIO()
-            camera.capture(stream, format='jpeg', use_video_port=False)
+            cam.camera.capture(stream, format='jpeg', use_video_port=False)
             data = np.frombuffer(stream.getvalue(), dtype=np.uint8)
             frame = cv2.imdecode(data, 1)
             if frame is not None:
-                prev_frame = process_frame(frame, prev_frame, default_settings['MINIMUM_AREA'])
+                prev_frame = cam.process_frame(frame, prev_frame)
             else:
                 print('No more frames')
     finally:
@@ -112,26 +105,26 @@ if __name__ == '__main__':
 
 
 
-'''
-folder = os.path.join(os.getcwd(), 'images')
-photo_stream = BytesIO()
-photo_camera = PiCamera(resolution=(1920, 1440))
-photo_camera.start_preview()
-sleep(2)
+    '''
+    folder = os.path.join(os.getcwd(), 'images')
+    photo_stream = BytesIO()
+    photo_camera = PiCamera(resolution=(1920, 1440))
+    photo_camera.start_preview()
+    sleep(2)
 
-for _ in camera.capture_continuous(stream, format='jpeg'):
-    image = image.open(stream)
-    # calculate average pixel value for detemining day-twilight-night conditions
-    pix_ave = int(np.average(image))
-    filename = datetime.datetime.now().strftime('%y-%m-%d - %a - %h-%m-%s') + f' ({pix_ave})img.jpg'
-    save_path = os.path.join(folder, filename)
-    rotated = image.rotate(90)
-    rotated.save(save_path)
-    # image.save(save_path)
-    print(':::::', datetime.datetime.now(), f'{filename} captured', sep='     ')
-    # wait 5 minutes
-    sleep(5*60)  
-    # "rewind" stream to the beginning so we can read its content
-    stream.seek(0)
-    stream.truncate()
-'''
+    for _ in camera.capture_continuous(stream, format='jpeg'):
+        image = image.open(stream)
+        # calculate average pixel value for detemining day-twilight-night conditions
+        pix_ave = int(np.average(image))
+        filename = datetime.datetime.now().strftime('%y-%m-%d - %a - %h-%m-%s') + f' ({pix_ave})img.jpg'
+        save_path = os.path.join(folder, filename)
+        rotated = image.rotate(90)
+        rotated.save(save_path)
+        # image.save(save_path)
+        print(':::::', datetime.datetime.now(), f'{filename} captured', sep='     ')
+        # wait 5 minutes
+        sleep(5*60)  
+        # "rewind" stream to the beginning so we can read its content
+        stream.seek(0)
+        stream.truncate()
+    '''
